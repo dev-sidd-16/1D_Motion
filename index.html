@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Car 1D Motion</title>
+<script type="text/javascript" src="d3/d3.v3.js"></script>
+<style>
+.box {
+fill: #f44;
+stroke: black;
+stroke-width: 2px;
+}
+
+path
+{
+stroke: red;
+stroke-width: 2px;
+fill: none;
+}
+
+line
+{
+stroke: black;
+stroke-width: 2px;
+}
+
+.background
+{
+outline: 1px solid red;
+background: linear-gradient(to top, rgba(0,0,255,0) rgba(0,0,255,1))
+}
+
+.nlabels
+{
+    color: darkgreen;
+    overflow: scroll;
+}
+text
+{
+font-family: Arial;
+font-size: 9pt;
+}
+
+</style>
+</head>
+<body>
+
+<script type="text/javascript">
+{
+
+    //Drawing The object
+    var w = 1350,
+	h = 400;
+
+    var text_02 = "Notes :: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare nunc vel eros dictum efficitur. Vestibulum ut lacus interdum nibh efficitur mollis. Sed pulvinar risus risus, id feugiat massa pretium nec. Sed tortor arcu, vehicula et semper ut, pulvinar id nisi. Praesent eget porta dolor. Etiam vel malesuada nisl. Morbi et eleifend augue. Cras non hendrerit augue. Nunc id nulla consectetur, vulputate nibh sed, pulvinar nulla. Pellentesque eget vehicula lacus, ac gravida nibh.	Sed fermentum tempus sapien sed elementum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vestibulum eleifend fermentum massa ut cursus. Vivamus luctus ipsum posuere elit cursus, pretium lobortis lectus posuere. Maecenas a eros velit. Quisque sollicitudin orci vel magna placerat, lacinia cursus magna vehicula. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In quis euismod risus, ac ornare magna. Quisque felis mauris, tristique sit amet tempor eu, elementum pellentesque sapien. Nulla imperdiet interdum leo non interdum. Duis maximus sem vitae purus sodales suscipit. Donec eu facilisis enim, eu condimentum odio. Fusce velit leo, accumsan ut efficitur at, venenatis id libero.	Phasellus condimentum ipsum eget nisl porttitor porttitor. Maecenas hendrerit neque nec aliquam convallis. Aenean egestas, nisl non aliquam tempor, diam neque varius justo, eu tristique arcu risus et magna. Nullam eget quam purus. Donec non sapien tempus, mattis enim ac, luctus erat. Fusce vel tincidunt ex. Quisque ornare, quam non porta semper, mi massa commodo tellus, gravida imperdiet arcu nulla sit amet magna. Mauris et orci urna. Nulla varius convallis vestibulum. Sed feugiat molestie odio eu pharetra. Duis auctor nec mi ut posuere. Integer porttitor pharetra odio, eu porta sapien pulvinar et. Donec eget malesuada nisi.	Donec sed ultrices dui. Etiam faucibus sit amet leo at lobortis. In tristique odio ut tempus tempus. Aliquam quis vehicula ligula, fringilla efficitur lacus. Fusce justo tortor, iaculis in aliquet quis, mattis quis tellus. Cras varius scelerisque sodales. Phasellus vel libero consectetur, tincidunt turpis ut, viverra purus. In mollis ex eu orci finibus rutrum. Nam nec condimentum leo. Vivamus nec vulputate lectus, vel ultrices sem. Fusce vel magna at ex vulputate tempor. Morbi consectetur velit sit amet arcu vestibulum convallis. Nulla tellus lorem, efficitur in ultrices id, feugiat convallis leo. Nullam ac nulla dui. Nulla facilisi. Etiam vitae neque malesuada, hendrerit ipsum sed, suscipit leo.Maecenas eleifend rhoncus suscipit. Nulla nisl nulla, placerat ut ipsum eget, congue facilisis augue. Mauris tempus luctus justo vel ornare. Quisque mollis eleifend lorem, eget commodo sem pulvinar a. Nunc sodales lectus et urna ultrices, at aliquet nunc volutpat. Nulla facilisi. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Curabitur eget lobortis nunc. Etiam aliquet interdum luctus. Phasellus mi massa, mattis egestas viverra ac, faucibus quis turpis. Nulla suscipit sit amet arcu nec ultrices. Sed nec vehicula metus, id facilisis mauris. ";
+    
+    var diag_w = w/2,
+	diag_h = h;
+    var mdl_w = diag_w*2/3,
+	mdl_h = h/2;
+    var gph_w = diag_w*2/3,
+	gph_h = h/2;
+    var dash_w = diag_w/3,
+	dash_h = h;
+
+    var notes_w = w/2
+	notes_h = h;
+
+    var dataset = [];
+    var boxSize = 100;
+    var margin = boxSize;
+ 
+    var car_x = margin-boxSize/2;
+    var car_y = mdl_h-boxSize;
+    var car_x_max = (mdl_w-margin-(boxSize/2));
+    var timeInterval = 90;
+    var time = 0;
+       
+    var motion = 1; // 1: forward, -1: backwards
+    var u_init = 0.0;
+    var u = motion * u_init;
+    var a = 0;
+    var v,s;
+    var constant = 2;
+	
+
+   
+    var svg = d3.select("body")
+	.append("svg")
+	.attr("width",w)
+	.attr("height",h)
+	.attr("class","background");
+    
+    var gradient = svg.append("svg:defs")
+	  .append("svg:linearGradient")
+	  .attr("id", "gradient")
+	  .attr("x1", "0%")
+	  .attr("y1", "100%")
+	  .attr("x2", "100%")
+	  .attr("y2", "100%")
+	  .attr("spreadMethod", "pad");
+
+    gradient.append("svg:stop")
+	    .attr("offset", "0%")
+	    .attr("stop-color", "#00f")
+	    .attr("stop-opacity", 1);
+
+    gradient.append("svg:stop")
+	    .attr("offset", "100%")
+	    .attr("stop-color", "#fff")
+	    .attr("stop-opacity", 1);
+
+    svg.append("svg:rect")
+	    .attr("width", w)
+	    .attr("height", h)
+	    .style("fill", "url(#gradient)");
+    
+    var diag = svg.append("svg")
+		  .attr("class", "diag")
+		  .attr("width" , diag_w)
+		  .attr("height", diag_h)
+		  .attr("y", 5);
+
+    var model = diag.append("svg")
+		  .attr("class", "model")
+		  .attr("width" , mdl_w)
+		  .attr("height", mdl_h);
+
+    var dash = diag.append("svg")
+		.attr("class", "dash")
+		.attr("width", dash_w)
+		.attr("heiight", dash_h)
+		.attr("x", mdl_w);
+    var graph = diag.append("svg") 
+		.attr("class", "graph")
+		.attr("width", gph_w)
+		.attr("height", gph_h)
+		.attr("y", mdl_h);
+
+    var path = graph.append("svg:path");
+
+    var notes = svg.append("foreignObject")
+		.attr("class", "notes")
+		.attr("width", notes_w)
+		.attr("height", notes_h)
+		.attr("x", diag_w+(notes_w/5));
+
+    var bgrnd = model.append("svg:image")
+	    .attr("xlink:href","img/back1.png")
+	    .attr("width", mdl_w)
+	    .attr("height", mdl_h)
+	    .attr("class", "back");
+	
+    var car = model.append("svg:image")
+	    .attr("xlink:href","img/car2.png")
+	    .attr("x" , car_x) 
+	    .attr("y", car_y)
+	    .attr("width", boxSize)
+	    .attr("height", boxSize)
+	    .attr("class", "car");
+	    
+    // X-Axis
+    graph.append('svg:line')
+         .attr('class', 'x-axis')
+         .attr('x1', boxSize/2)
+         .attr('y1', gph_h-10)
+         .attr('x2', gph_w-(margin/2))
+         .attr('y2', gph_h-10);
+    // Y-Axis
+    graph.append('svg:line')
+         .attr('class', 'y-axis')
+         .attr('x1', boxSize/2)
+         .attr('y1', gph_h-10)
+         .attr('x2', boxSize/2)
+         .attr('y2', 10);
+ 
+   
+    var xScale = d3.scale.linear()
+			 .domain([0, 2*timeInterval])
+			 .range([boxSize/2, gph_w-(margin)-(boxSize/2)]);
+
+    var yScale = d3.scale.linear()
+			 .domain([0, car_x_max])
+			 .range([gph_h-10, 10 ]);
+
+    var curve = d3.svg.line()
+            .x(function(d,i) { return xScale(i); })
+            .y(function(d) { return yScale(d); });
+
+ 
+    model.append('svg:text')
+         .attr('class', 'model-label')
+	 .text('Model/System')
+         .attr('x', mdl_w/2 - 50)
+	 .attr('y', mdl_h/5);
+
+
+    model.append('svg:text')
+         .attr('class', 'model-label')
+	 .text(Math.ceil(1000/timeInterval)+' fps')
+         .attr('x',(mdl_w/2)-30)
+         .attr('y', (mdl_h)-5);
+
+
+    graph.append('svg:text')
+         .attr('class', 'graph-label')
+	 .text('Graph')
+         .attr('x',gph_w/2 - 35)
+	 .attr('y', gph_h/3);
+
+    graph.append('svg:text')
+	 .attr('class', 'x-label')
+	 .text('time')
+	 .attr('x', gph_w-(margin/2)-10)
+         .attr('y', gph_h-20);
+
+    graph.append('svg:text')
+	 .attr('class', 'y-label')
+	 .text('car_x')
+	 .attr('x', boxSize/2+5)
+         .attr('y', 20);
+
+
+    dash.append('svg:text')
+         .attr('class', 'dash-label')
+	 .text('Dashboard')
+         .attr('x',(dash_w/2)-30)
+	 .attr('y', dash_h/12);
+
+    dash.append('svg:text')
+	.attr('class', 'carx')
+	.text('car_x(distance): '+ car_x)
+	.attr('x',(dash_w/2)-30)
+	.attr('y', dash_h/6);
+
+    
+    dash.append('svg:text')
+	.attr('class', 'tim')
+	.text('time: '+ time)
+	.attr('x',(dash_w/2)-30)
+	.attr('y', dash_h/3);
+
+
+    dash.append('svg:text')
+	.attr('class', 'motion')
+	.text('motion: '+ motion)
+	.attr('x',(dash_w/2)-30)
+	.attr('y', (dash_h/2));
+
+    dash.append('svg:text')
+	.attr('class', 'dis')
+	.text('displacement: '+ s)
+	.attr('x',(dash_w/2)-30)
+	.attr('y', (dash_h*2)/3);
+
+    dash.append('svg:text')
+	.attr('class', 'vel')
+	.text('velocity: '+ v)
+	.attr('x',(dash_w/2)-30)
+	.attr('y', (dash_h*5)/6);
+
+
+    notes.append('xhtml:body')
+	  .attr("class", "nlabels")
+	  .style({width : notes_w/1.5 + "px", height : notes_h-10 + "px", font: 20 + "px 'Times New Roman' "})
+	  .text(text_02)
+	  .attr('x', notes_w/2 - 30)
+	  .attr('y', notes_h/5);
+
+    
+function update(){
+
+	time = dataset.length;
+	    
+	// To define motion of the car
+	v = u+(a*time);
+	if (u_init != 0)
+	{
+	    s = ((v+u)/2)*time ;
+	}
+	else
+	{
+	    s = motion * constant;
+	}
+
+	car_x = car_x + s;
+
+	if( car_x > car_x_max && motion == 1)
+	{
+	    motion = -1;
+	    u = motion * u_init;
+	}
+
+	if( car_x < boxSize/2 && motion == -1)
+	{
+	    motion = 1;
+	    u = motion * u_init;
+	    dataset = [];
+	}
+
+	dataset.push(car_x);
+
+	path.transition()
+	    .attr("d", curve(dataset));
+	
+	dash.selectAll("text").filter('.carx')
+	    .transition()
+	    .text('car_x(distance): '+ car_x);
+
+	dash.selectAll("text").filter('.tim')
+	    .transition()
+	    .text('time: '+ time);
+
+	dash.selectAll("text").filter('.motion')
+	    .transition()
+	    .text('motion: '+ motion);
+
+	dash.selectAll("text").filter('.dis')
+	    .transition()
+	    .text('displacement: '+ s);
+
+
+	dash.selectAll("text").filter('.vel')
+	    .transition()
+	    .text('velocity: '+ v);
+
+
+
+	// Updating the attribute of car to match the motion calculated
+	var c1 = model.selectAll("image")
+		    .filter(".car");
+	c1.transition()
+	    .attr("x", function(){
+		        return car_x;
+		});
+
+    }
+    
+
+   //Updating the objects x attribute to animate with time
+   setInterval(function(){
+	    update();
+	    }, timeInterval);
+
+         
+}
+
+</script>
+</body>
+</html>     
